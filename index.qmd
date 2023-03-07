@@ -1,0 +1,96 @@
+---
+title: "MRC Examples"
+format: html
+toc: true
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+# Setup
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library("tidyverse")
+library("ds4ling")
+library("untidydata")
+library("broom")
+library("emmeans")
+```
+
+# Data
+```{r}
+#| label: explore-data
+
+ld <- language_diversity %>% 
+  mutate_if(is.character, as.factor) %>% 
+  pivot_wider(
+    names_from = Measurement, 
+    values_from = Value
+  ) %>% 
+  mutate(
+    lang_log = log(Langs), 
+    area_log = log(Area), 
+    pop_log = log(Population)
+  )
+
+
+summary(ld)
+dim(ld)
+str(ld)
+glimpse(ld)
+  
+```
+
+# Analysis 
+```{r}
+#| label: fit-model
+
+mean(ld$lang_log)
+
+mod_0 <- lm(lang_log ~ 1, data = ld)
+mod_1 <- lm(lang_log ~ 1 + pop_log, data = ld)
+mod_2 <- lm(lang_log ~ 1 + pop_log + area_log, data = ld)
+mod_3 <- lm(lang_log ~ 1 + pop_log + area_log + pop_log:area_log, data = ld)
+summary(mod_0)
+summary(mod_1)
+summary(mod_2)
+summary(mod_3)
+```
+
+# Tables and Plots
+Hello, please appreciate @tbl-model1, better than @tbl-model2
+```{r}
+#| label: tbl-model1
+#| tbl-cap: "Mod 2"
+
+tidy(mod_2) %>% 
+  knitr::kable(format = "pandoc")
+```
+
+```{r}
+#| label: tbl-model2
+#| tbl-cap: "Mod 3"
+
+tidy(mod_3) %>% 
+  knitr::kable(format = "pandoc")
+```
+
+```{r}
+emmeans(
+  object = mod_3,
+  specs = ~ pop_log * area_log, 
+  at = list(pop_log = c(0, 10, 20),
+            area_log = c(0, 10, 20))
+  )
+```
+
+
+
+
+
+
+
+
